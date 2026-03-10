@@ -1,74 +1,43 @@
 package io.github.fatec.introducao.controller;
 
+import io.github.fatec.introducao.model.Pessoa;
+import io.github.fatec.introducao.service.PessoaService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import java.util.UUID;
+
+import java.util.Collection;
 
 @RestController
-@RequestMapping("/pessoa")
+@RequestMapping("/pessoas")
 public class PessoaController {
 
-    private static PessoaReqst pessoaSalva;
+    @Autowired
+    private PessoaService service;
 
-    // --- POST ---
-    @PostMapping
-    public PessoaReqst criar(@RequestBody PessoaRequest request) {
-        String novoId = UUID.randomUUID().toString();
-        pessoaSalva = new PessoaReqst(novoId, request.getNome());
-        return pessoaSalva;
-    }
-
-    // --- GET ---
     @GetMapping
-    public PessoaReqst buscar() {
-        return pessoaSalva;
+    public Collection<Pessoa> listar() {
+        return service.listar();
     }
 
-    // --- PUT ---
-    // Recebe ID, Nome, Telefone, Endereço. Retorna ID e Nome.
-    @PutMapping
-    public PessoaReqst atualizar(@RequestBody PessoaRequest request) {
-        pessoaSalva = new PessoaReqst(request.getId(), request.getNome());
-        return pessoaSalva;
+    @PostMapping
+    public Pessoa criar(@RequestBody Pessoa pessoa){
+        return service.criar(pessoa);
     }
 
-    // --- 4. DELETE ---
-    // Recebe ID e retorna "Usuário {id} deletado".
+    @PutMapping("/{id}")
+    public Pessoa atualizar(@PathVariable Long id, @RequestBody Pessoa pessoa) {
+        pessoa.setId(id);
+        return service.atualizar(pessoa);
+    }
+
     @DeleteMapping("/{id}")
-    public String deletar(@PathVariable("id") String id) {
-        pessoaSalva = null; // Limpa o objeto da memória
-        return "Usuário " + id + " deletado";
-    }
+    public String deletar(@PathVariable Long id) {
+        boolean excluiu = service.deletar(id);
 
-
-    public static class PessoaRequest {
-        private String id;
-        private String nome;
-        private String telefone;
-        private String endereco;
-
-        // Getters e Setters necessários para o Spring converter o JSON
-        public String getId() { return id; }
-        public void setId(String id) { this.id = id; }
-        public String getNome() { return nome; }
-        public void setNome(String nome) { this.nome = nome; }
-        public String getTelefone() { return telefone; }
-        public void setTelefone(String telefone) { this.telefone = telefone; }
-        public String getEndereco() { return endereco; }
-        public void setEndereco(String endereco) { this.endereco = endereco; }
-    }
-
-    public static class PessoaReqst {
-        private String id;
-        private String nome;
-
-        public PessoaReqst(String id, String nome) {
-            this.id = id;
-            this.nome = nome;
+        if (excluiu) {
+            return "Usuário com ID " + id + " deletado com sucesso!";
+        } else {
+            return "Usuário não encontrado.";
         }
-
-        public String getId() { return id; }
-        public void setId(String id) { this.id = id; }
-        public String getNome() { return nome; }
-        public void setNome(String nome) { this.nome = nome; }
     }
 }
